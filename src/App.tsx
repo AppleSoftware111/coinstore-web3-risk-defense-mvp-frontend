@@ -20,7 +20,7 @@ import { ReasonList } from "./components/ReasonList";
 import { PipelineTiming } from "./components/PipelineTiming";
 import { RawResponseAccordion } from "./components/RawResponseAccordion";
 import { useRiskWebSocket } from "./hooks/useRiskWebSocket";
-import { getApiBaseUrl } from "./lib/apiBase";
+import { getApiBaseUrl, withApiHeaders } from "./lib/apiBase";
 import type { AnalyzeRequest, DemoPostResponse, NetworkInfo, RiskDecision, WsMessage } from "./types";
 
 type ViewModel = {
@@ -53,7 +53,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${getApiBaseUrl()}/api/networks`)
+    fetch(`${getApiBaseUrl()}/api/networks`, { headers: withApiHeaders() })
       .then((res) => res.json())
       .then((json: { networks: NetworkInfo[] }) => {
         setNetworks(json.networks);
@@ -79,7 +79,7 @@ export default function App() {
     try {
       const response = await fetch(`${getApiBaseUrl()}/api/analyze`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: withApiHeaders({ "content-type": "application/json" }),
         body: JSON.stringify(form),
       });
       if (!response.ok) {
@@ -99,7 +99,10 @@ export default function App() {
     setLoading(id);
     setError(null);
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/demo/${id}`, { method: "POST" });
+      const response = await fetch(`${getApiBaseUrl()}/api/demo/${id}`, {
+        method: "POST",
+        headers: withApiHeaders(),
+      });
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
         throw new Error((err as { error?: string }).error ?? `HTTP ${response.status}`);
